@@ -41,6 +41,15 @@ jobs:
             assert.match(await response.text(), /<html lang="zh-CN">/);
             const favicon = await fetch("http://127.0.0.1:37991/favicon.ico");
             assert.equal(favicon.status, 204);
+            const missing = await fetch("http://127.0.0.1:37991/not-a-page");
+            assert.equal(missing.status, 404, "Unknown routes must not return HTTP 200");
+            const head = await fetch("http://127.0.0.1:37991/", {method:"HEAD"});
+            assert.equal(head.status, 200);
+            assert.equal(await head.text(), "");
+            const post = await fetch("http://127.0.0.1:37991/", {method:"POST"});
+            assert.equal(post.status, 405, "Preview server is read-only");
+            assert.equal(post.headers.get("allow"), "GET, HEAD");
+            assert.equal(response.headers.get("x-content-type-options"), "nosniff");
             console.log("Preview HTTP smoke test passed.");
           '
       - name: Generate static site without npm install
