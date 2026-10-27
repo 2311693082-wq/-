@@ -17,7 +17,7 @@ const FORBIDDEN_PROMOTIONS = [
 ];
 const ENTITY_NAMES = Object.freeze({
   amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ',
-  zwj: '', zwnj: '', ZeroWidthSpace: '', ThinSpace: ' '
+  zwj: '', zwnj: '', ZeroWidthSpace: '', ThinSpace: ' ', shy: '', lrm: '', rlm: ''
 });
 
 function decodeEntities(input) {
@@ -37,16 +37,64 @@ function decodeEntities(input) {
   return result;
 }
 
-export function extractVisibleLines(html) {
+const BLOCK_TAGS = new Set(['p', 'div', 'section', 'article', 'li', 'main', 'footer', 'header', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6']);
+const VOID_TAGS = new Set(['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'param', 'source', 'track', 'wbr']);
+
+function attribute(attrs, name) {
+  // Require a whitespace boundary: data-hidden must not count as hidden.
+  const match = new RegExp('(?:^|\\s)' + name + '(?:\\s*=\\s*(?:"([^"]*)"|\\x27([^\\x27]*)\\x27|([^\\s>]+)))?(?=\\s|$)', 'i').exec(attrs);
+  return match ? { present: true, value: match[1] ?? match[2] ?? match[3] ?? '' } : { present: false, value: '' };
+}
+
+function isHiddenTag(attrs) {
+  if (attribute(attrs, 'hidden').present) return true;
+  if (attribute(attrs, 'aria-hidden').value.toLowerCase() === 'true') return true;
+  const style = attribute(attrs, 'style').value;
+  return /(?:^|;)\s*(?:display\s*:\s*none|visibility\s*:\s*hidden|content-visibility\s*:\s*hidden|opacity\s*:\s*0(?:\s|!|;|$))/i.test(style);
+}
+
+/**
+ * Lightweight static-HTML extractor. This is NOT a browser rendering engine:
+ * stylesheet-driven visibility still requires a browser-level audit.
+ * Hidden promotions remain subject to the copy check, but only visible notices
+ * can satisfy the mandatory disclosure requirement.
+ */
+export function extractVisibleLines(html, { includeHidden = false } = {}) {
   assert.equal(typeof html, 'string', 'Generated HTML must be text');
-  const text = html
+  const source = html
     .replace(/<!--[\s\S]*?-->/g, '')
-    .replace(/<(script|style|template|svg)\b[^>]*>[\s\S]*?<\/\1\s*>/gi, '')
-    .replace(/<\s*br\b[^>]*\/?\s*>/gi, '\n')
-    .replace(/<\/\s*(?:p|div|section|article|li|h[1-6]|main|footer|header)\s*>/gi, '\n')
-    .replace(/<[^>]*>/g, '');
-  return decodeEntities(text).normalize('NFKC')
-    .replace(/[\u200B-\u200D\uFEFF\u2060]/g, '')
+    .replace(/<(script|style|template|svg|head|noscript)\b[^>]*>[\s\S]*?<\/\1\s*>/gi, '');
+  const tokens = source.match(/<(?:(?:"[^"]*"|'[^']*'|[^'">])*)>|[^<]+/g) || [];
+  const stack = [];
+  const output = [];
+  for (const token of tokens) {
+    if (!token.startsWith('<')) {
+      if (!stack.some(frame => frame.hidden)) output.push(token);
+      continue;
+    }
+    if (/^<\s*!/.test(token)) continue;
+    const closing = /^<\s*\/\s*([a-z][\w:-]*)/i.exec(token);
+    if (closing) {
+      const name = closing[1].toLowerCase();
+      const index = stack.findLastIndex(frame => frame.name === name);
+      if (index !== -1) {
+        const wasHidden = stack.some(frame => frame.hidden);
+        stack.length = index;
+        if (BLOCK_TAGS.has(name) && !wasHidden) output.push('\n');
+      }
+      continue;
+    }
+    const opening = /^<\s*([a-z][\w:-]*)\b([\s\S]*?)\/?>$/i.exec(token);
+    if (!opening) continue;
+    const name = opening[1].toLowerCase();
+    const attrs = opening[2];
+    const hidden = !includeHidden && isHiddenTag(attrs);
+    const parentHidden = stack.some(frame => frame.hidden);
+    if (name === 'br' && !hidden && !parentHidden) output.push('\n');
+    if (!VOID_TAGS.has(name) && !/\/\s*>$/.test(token)) stack.push({ name, hidden });
+  }
+  return decodeEntities(output.join('')).normalize('NFKC')
+    .replace(/[\p{Cf}\u034F\uFE0E\uFE0F]/gu, '')
     .split(/\r?\n/)
     .map(line => line.replace(/\s+/g, ''))
     .filter(Boolean);
@@ -56,7 +104,7 @@ export function checkCompliance(html) {
   const lines = extractVisibleLines(html);
   const notice = REQUIRED_NOTICE.normalize('NFKC').replace(/\s+/g, '');
   assert.ok(lines.some(line => line.includes(notice)), 'Mandatory entertainment-points restriction missing from visible text');
-  for (const line of lines) {
+  for (const line of extractVisibleLines(html, { includeHidden: true })) {
     for (const pattern of FORBIDDEN_PROMOTIONS) {
       assert.doesNotMatch(line, pattern, `Prohibited points/prize promotion: ${pattern}`);
     }
