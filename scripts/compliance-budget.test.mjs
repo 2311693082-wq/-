@@ -116,3 +116,21 @@ test('natural-language points trading claims are blocked while restrictions rema
   }
   assert.equal(checkCompliance(html('<p>活动记分不可兑换现金，也不可转让。</p>')).noticePresent, true);
 });
+
+
+test('HTML character references and named whitespace normalize visible disclosure', () => {
+  for (const markup of [
+    REQUIRED_NOTICE.replace('记', '&#x8bb0'),
+    REQUIRED_NOTICE.replace('记', '&#35760'),
+    REQUIRED_NOTICE.replace('记', '记&Tab;'),
+    REQUIRED_NOTICE.replace('记', '记&NewLine;')
+  ]) assert.equal(checkCompliance(`<html><body><p>${markup}</p></body></html>`).noticePresent, true);
+});
+
+test('inert and fully transparent notices cannot satisfy visible disclosure', () => {
+  for (const markup of [
+    `<section inert><p>${REQUIRED_NOTICE}</p></section>`,
+    `<p style="opacity:0.0">${REQUIRED_NOTICE}</p>`,
+    `<p style="opacity: 0.00 !important">${REQUIRED_NOTICE}</p>`
+  ]) assert.throws(() => checkCompliance(`<html><body>${markup}<p>普通活动</p></body></html>`), /restriction missing/, markup);
+});
