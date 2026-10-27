@@ -27,7 +27,7 @@ PORT="${PORT:-3000}"
 while lsof -nP -iTCP:"$PORT" -sTCP:LISTEN >/dev/null 2>&1; do
   PORT=$((PORT + 1))
 done
-LAN_IP="$(ifconfig | awk '/inet / && $2 != "127.0.0.1" && $2 !~ /^169\\.254\\./ { print $2; exit }')"
+LAN_IP="$(ifconfig | awk '/inet / && $2 != "127.0.0.1" && $2 !~ /^169\.254\./ { print $2; exit }')"
 LOCAL_URL="http://localhost:$PORT"
 
 echo "黑桃党静态预览：$LOCAL_URL"
