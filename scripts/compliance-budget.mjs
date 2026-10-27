@@ -112,11 +112,41 @@ export function extractVisibleLines(html, { includeHidden = false } = {}) {
   return lines;
 }
 
+// Accessible names and search/social snippets are public-facing copy too.
+// They must be scanned for prohibited promotions, but never count as the
+// on-page visible disclosure. This deliberately ignores non-copy attributes.
+function extractPromotionalAttributes(html) {
+  const source = html.replace(/<!--[\s\S]*?-->/g, '')
+    .replace(/<(script|style|template|svg|noscript)\b[^>]*>[\s\S]*?<\/\1\s*>/gi, '');
+  const tags = source.match(/<(?:(?:"[^"]*"|'[^']*'|[^'">])*)>/g) || [];
+  const values = [];
+  for (const tag of tags) {
+    const opening = /^<\s*([a-z][\w:-]*)\b([\s\S]*?)\/?>$/i.exec(tag);
+    if (!opening) continue;
+    const name = opening[1].toLowerCase();
+    const attrs = opening[2];
+    for (const key of ['alt', 'title', 'aria-label', 'aria-description', 'placeholder']) {
+      const found = attribute(attrs, key);
+      if (found.present && found.value) values.push(found.value);
+    }
+    if (name === 'meta') {
+      const kind = (attribute(attrs, 'name').value || attribute(attrs, 'property').value).trim();
+      if (/^(?:description|keywords|og:title|og:description|twitter:title|twitter:description)$/i.test(kind)) {
+        const content = attribute(attrs, 'content');
+        if (content.present && content.value) values.push(content.value);
+      }
+    }
+  }
+  return values.map(value => decodeEntities(value).normalize('NFKC')
+    .replace(/[\p{Cf}\u034F\uFE0E\uFE0F]/gu, '')
+    .replace(/\s+/g, ''));
+}
+
 export function checkCompliance(html) {
   const lines = extractVisibleLines(html);
   const notice = REQUIRED_NOTICE.normalize('NFKC').replace(/\s+/g, '');
   assert.ok(lines.some(line => line.includes(notice)), 'Mandatory entertainment-points restriction missing from visible text');
-  for (const line of extractVisibleLines(html, { includeHidden: true })) {
+  for (const line of [...extractVisibleLines(html, { includeHidden: true }), ...extractPromotionalAttributes(html)]) {
     for (const pattern of FORBIDDEN_PROMOTIONS) {
       assert.doesNotMatch(line, pattern, `Prohibited points/prize promotion: ${pattern}`);
     }
