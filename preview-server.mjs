@@ -40,7 +40,7 @@ const html = `<!doctype html>
     </div>
   </header>
   <section id="top" class="hero">
-    <div class="hero-bg" style="background-image:url('${site.heroMobileImage}')"></div>
+    <div class="hero-bg" style="background-image:url('${site.heroMobileImage}');background-image:image-set(url('${site.heroMobileImage}') 1x,url('${site.heroImage}') 2x)"></div>
     <div class="container hero-grid">
       <div>
         <div class="pill"><span class="dot"></span>${site.city} · Cocktail / Poker / Mahjong</div>

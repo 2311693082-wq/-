@@ -49,6 +49,12 @@ assert.ok(background, 'Expected hero background');
 const backgroundWidth = Number(new URL(background).searchParams.get('w'));
 assert.ok(backgroundWidth > 0 && backgroundWidth <= 640,
   'Decorative hero background should use a low-resolution image');
+// On modern browsers the decorative background and hero card share the same
+// 1x/2x URLs, so the browser cache can reuse the selected image response.
+assert.match(bgTag, /background-image:image-set\(/);
+const mobileHeroUrl = attr(hero, 'srcset').split(', ')[0].split(' 640w')[0];
+assert.ok(bgTag.includes(`url('${mobileHeroUrl}') 1x`), 'Background 1x must reuse hero 640w candidate');
+assert.ok(bgTag.includes(`url('${attr(hero, 'src')}') 2x`), 'Background 2x must reuse hero desktop candidate');
 
 console.log(JSON.stringify({result:'pass',htmlBytes:bytes,maxBytes,images:images.length,
   lazyImages:6,preloads:preloads.length,externalScripts:0,externalStylesheets:0}));
