@@ -74,3 +74,28 @@ test('newlines, HTML line breaks and encoded whitespace cannot split a prohibite
   ]) assert.throws(() => checkCompliance(html(`<p>${promotion}</p>`)), /Prohibited points\/prize promotion/, promotion);
   assert.deepEqual(extractVisibleLines('<p>积分可\n兑换现金</p><p>普通活动</p>'), ['积分可兑换现金', '普通活动']);
 });
+
+
+test('rejects prohibited promotions in accessible attributes and social previews', () => {
+  for (const markup of [
+    '<img alt="积分可兑&#x6362;现金" src="/example.png">',
+    '<a aria-label="现金&#x5956;励" href="#">查看</a>',
+    '<div title="积分可\u200b转让">活动</div>',
+    '<input placeholder="筹码充值">',
+    '<meta name="description" content="积分可兑换现金">',
+    '<meta property="og:description" content="积分可兑换现金">',
+    '<meta name="twitter:title" content="实物奖励">'
+  ]) assert.throws(() => checkCompliance(html(markup)), /Prohibited points\/prize promotion/, markup);
+});
+
+test('metadata and accessibility attributes cannot satisfy visible disclosure', () => {
+  for (const markup of [
+    `<img alt="${REQUIRED_NOTICE}">`,
+    `<meta name="description" content="${REQUIRED_NOTICE}">`,
+    `<a aria-label="${REQUIRED_NOTICE}">预约</a>`
+  ]) assert.throws(() => checkCompliance(`<html><head>${markup}</head><body>活动</body></html>`), /restriction missing/);
+});
+
+test('neutral metadata and accessible names remain allowed', () => {
+  assert.equal(checkCompliance(html('<meta name="description" content="无锡夜生活与朋友聚会"><img alt="酒馆环境">')).noticePresent, true);
+});
