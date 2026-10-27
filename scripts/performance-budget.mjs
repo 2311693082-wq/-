@@ -35,15 +35,16 @@ for (const url of urls) {
   assert.ok(quality > 0 && quality <= 75, `Image exceeds quality budget: ${url}`);
 }
 
-const hero = images.find(x => /\\bfetchpriority=["']high["']/i.test(x));
-const attr = (tag, name) => tag.match(new RegExp('\\\\b' + name + '=["\\']([^"\\']+)["\\']', 'i'))?.[1];
-const desktopPreload = preloads.find(x => /media=["']\\(min-width: 901px\\)["']/i.test(x[0]))?.[0];
+const hero = images.find(tag => tag.includes('fetchpriority="high"'));
+const attr = (tag, name) => tag?.split(name + '="')[1]?.split('"')[0];
+const desktopPreload = preloads.find(match => match[0].includes('media="(min-width: 901px)"'))?.[0];
 assert.ok(desktopPreload, 'Desktop preload must be present');
 assert.equal(attr(desktopPreload, 'imagesrcset'), attr(hero, 'srcset'),
   'Desktop preload must select the same responsive resource as hero img');
 assert.equal(attr(desktopPreload, 'imagesizes'), attr(hero, 'sizes'),
   'Desktop preload and hero img sizes must match');
-const background = html.match(/class=["']hero-bg["'][^>]*style=["']background-image:url\\('([^']+)'\\)/i)?.[1];
+const bgTag = html.match(/<div class="hero-bg"[^>]*>/)?.[0];
+const background = bgTag?.split("url('")[1]?.split("')")[0];
 assert.ok(background, 'Expected hero background');
 const backgroundWidth = Number(new URL(background).searchParams.get('w'));
 assert.ok(backgroundWidth > 0 && backgroundWidth <= 640,
