@@ -31,6 +31,13 @@ for (const tag of images) {
   assert.match(tag, /\bheight=["']\d+["']/i, 'Image height prevents layout shift');
   assert.match(tag, /\bdecoding=["']async["']/i);
 }
+// Creator section is below the fold: allow a smaller 480w candidate on
+// narrow/low-density displays instead of always fetching the 960w source.
+const creator = images.find(tag => tag.includes('alt="年轻人聚会举杯场景"'));
+assert.ok(creator, 'Creator photo must exist');
+assert.match(creator, /srcset="[^"]+w=480[^"]+ 480w, [^"]+w=960[^"]+ 960w"/);
+assert.ok(creator.includes('sizes="(max-width: 900px) calc(100vw - 64px), 560px"'), 'Creator responsive sizes must match the layout');
+assert.match(creator, /loading="lazy"/);
 const preloads = [...html.matchAll(/<link\b[^>]*rel=["']preload["'][^>]*as=["']image["'][^>]*>/gi)];
 assert.equal(preloads.length, 2, 'Use separate desktop and mobile hero preload hints');
 assert.match(html, /imagesrcset=["'][^"']+640w, [^"']+1200w["']/i);
