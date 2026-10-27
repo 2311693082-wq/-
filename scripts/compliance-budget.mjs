@@ -17,17 +17,19 @@ const FORBIDDEN_PROMOTIONS = [
 ];
 const ENTITY_NAMES = Object.freeze({
   amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ',
-  zwj: '', zwnj: '', ZeroWidthSpace: '', ThinSpace: ' ', shy: '', lrm: '', rlm: ''
+  zwj: '', zwnj: '', zerowidthspace: '', thinspace: ' ', shy: '', lrm: '', rlm: '',
+  tab: ' ', newline: ' '
 });
 
 function decodeEntities(input) {
   let result = input;
   // Bounded passes handle e.g. &amp;#x5151; without unbounded expansion.
   for (let pass = 0; pass < 3; pass++) {
-    const next = result.replace(/&(#(?:x[0-9a-f]+|\d+)|[a-z][a-z0-9]+);/gi, (match, entity) => {
-      if (entity[0] !== '#') return ENTITY_NAMES[entity] ?? match;
-      const hex = /^#x/i.test(entity);
-      const codepoint = Number.parseInt(entity.slice(hex ? 2 : 1), hex ? 16 : 10);
+    const next = result.replace(/&(#(?:x[0-9a-f]+|\d+);?|[a-z][a-z0-9]+;)/gi, (match, entity) => {
+      if (entity[0] !== '#') return ENTITY_NAMES[entity.slice(0, -1).toLowerCase()] ?? match;
+      const numeric = entity.endsWith(';') ? entity.slice(0, -1) : entity;
+      const hex = /^#x/i.test(numeric);
+      const codepoint = Number.parseInt(numeric.slice(hex ? 2 : 1), hex ? 16 : 10);
       return codepoint > 0 && codepoint <= 0x10ffff && !(codepoint >= 0xd800 && codepoint <= 0xdfff)
         ? String.fromCodePoint(codepoint) : match;
     });
