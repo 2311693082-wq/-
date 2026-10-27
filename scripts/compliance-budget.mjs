@@ -10,24 +10,26 @@ import { fileURLToPath } from 'node:url';
 
 export const REQUIRED_NOTICE = '活动记分不可购买、出售、转让、借用，也不可兑换现金、实物或有价券。';
 const FORBIDDEN_PROMOTIONS = [
-  /(?:积分|计分牌|筹码)(?:可|能|支持|直接)?(?:购买|充值|兑换|出售|转让|交易|提现|抵扣)/i,
+  /(?:积分|计分牌|筹码)(?:可以|能够|可用于|可用来|可|能|支持|直接|允许|用于|用来)?(?:购买|充值|兑换|出售|转让|交易|提现|抵扣)/i,
   /(?:现金|实物|有价券)(?:奖励|兑换|返还)/i,
   /(?:购买|充值)(?:积分|计分牌|筹码)/i,
-  /(?:积分|筹码|计分牌)(?:换取|换成|换)(?:现金|奖品|实物|有价券|酒水|饮品|餐食)/i
+  /(?:积分|筹码|计分牌)(?:可以|能够|可|能|直接)?(?:换取|换成|换)(?:现金|奖品|实物|有价券|酒水|饮品|餐食)/i
 ];
 const ENTITY_NAMES = Object.freeze({
   amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ',
-  zwj: '', zwnj: '', ZeroWidthSpace: '', ThinSpace: ' ', shy: '', lrm: '', rlm: ''
+  zwj: '', zwnj: '', zerowidthspace: '', thinspace: ' ', shy: '', lrm: '', rlm: '',
+  tab: ' ', newline: ' '
 });
 
 function decodeEntities(input) {
   let result = input;
   // Bounded passes handle e.g. &amp;#x5151; without unbounded expansion.
   for (let pass = 0; pass < 3; pass++) {
-    const next = result.replace(/&(#(?:x[0-9a-f]+|\d+)|[a-z][a-z0-9]+);/gi, (match, entity) => {
-      if (entity[0] !== '#') return ENTITY_NAMES[entity] ?? match;
-      const hex = /^#x/i.test(entity);
-      const codepoint = Number.parseInt(entity.slice(hex ? 2 : 1), hex ? 16 : 10);
+    const next = result.replace(/&(#(?:x[0-9a-f]+|\d+);?|[a-z][a-z0-9]+;)/gi, (match, entity) => {
+      if (entity[0] !== '#') return ENTITY_NAMES[entity.slice(0, -1).toLowerCase()] ?? match;
+      const numeric = entity.endsWith(';') ? entity.slice(0, -1) : entity;
+      const hex = /^#x/i.test(numeric);
+      const codepoint = Number.parseInt(numeric.slice(hex ? 2 : 1), hex ? 16 : 10);
       return codepoint > 0 && codepoint <= 0x10ffff && !(codepoint >= 0xd800 && codepoint <= 0xdfff)
         ? String.fromCodePoint(codepoint) : match;
     });
@@ -47,10 +49,10 @@ function attribute(attrs, name) {
 }
 
 function isHiddenTag(attrs) {
-  if (attribute(attrs, 'hidden').present) return true;
+  if (attribute(attrs, 'hidden').present || attribute(attrs, 'inert').present) return true;
   if (attribute(attrs, 'aria-hidden').value.toLowerCase() === 'true') return true;
   const style = attribute(attrs, 'style').value;
-  return /(?:^|;)\s*(?:display\s*:\s*none|visibility\s*:\s*hidden|content-visibility\s*:\s*hidden|opacity\s*:\s*0(?:\s|!|;|$))/i.test(style);
+  return /(?:^|;)\s*(?:display\s*:\s*none|visibility\s*:\s*hidden|content-visibility\s*:\s*hidden|opacity\s*:\s*0+(?:\.0+)?(?:\s*!important)?(?=;|$))/i.test(style);
 }
 
 /**
@@ -112,11 +114,45 @@ export function extractVisibleLines(html, { includeHidden = false } = {}) {
   return lines;
 }
 
+// Accessible names and search/social snippets are public-facing copy too.
+// They must be scanned for prohibited promotions, but never count as the
+// on-page visible disclosure. This deliberately ignores non-copy attributes.
+function extractPromotionalAttributes(html) {
+  const source = html.replace(/<!--[\s\S]*?-->/g, '')
+    .replace(/<(script|style|template|svg|noscript)\b[^>]*>[\s\S]*?<\/\1\s*>/gi, '');
+  const tags = source.match(/<(?:(?:"[^"]*"|'[^']*'|[^'">])*)>/g) || [];
+  const values = [];
+  // Document titles are exposed in tabs and search results, not on-page notices.
+  for (const match of source.matchAll(/<title\b[^>]*>([\s\S]*?)<\/title\s*>/gi)) {
+    values.push(match[1].replace(/<[^>]*>/g, ''));
+  }
+  for (const tag of tags) {
+    const opening = /^<\s*([a-z][\w:-]*)\b([\s\S]*?)\/?>$/i.exec(tag);
+    if (!opening) continue;
+    const name = opening[1].toLowerCase();
+    const attrs = opening[2];
+    for (const key of ['alt', 'title', 'aria-label', 'aria-description', 'placeholder']) {
+      const found = attribute(attrs, key);
+      if (found.present && found.value) values.push(found.value);
+    }
+    if (name === 'meta') {
+      const kind = (attribute(attrs, 'name').value || attribute(attrs, 'property').value).trim();
+      if (/^(?:description|keywords|og:title|og:description|twitter:title|twitter:description)$/i.test(kind)) {
+        const content = attribute(attrs, 'content');
+        if (content.present && content.value) values.push(content.value);
+      }
+    }
+  }
+  return values.map(value => decodeEntities(value).normalize('NFKC')
+    .replace(/[\p{Cf}\u034F\uFE0E\uFE0F]/gu, '')
+    .replace(/\s+/g, ''));
+}
+
 export function checkCompliance(html) {
   const lines = extractVisibleLines(html);
   const notice = REQUIRED_NOTICE.normalize('NFKC').replace(/\s+/g, '');
   assert.ok(lines.some(line => line.includes(notice)), 'Mandatory entertainment-points restriction missing from visible text');
-  for (const line of extractVisibleLines(html, { includeHidden: true })) {
+  for (const line of [...extractVisibleLines(html, { includeHidden: true }), ...extractPromotionalAttributes(html)]) {
     for (const pattern of FORBIDDEN_PROMOTIONS) {
       assert.doesNotMatch(line, pattern, `Prohibited points/prize promotion: ${pattern}`);
     }
