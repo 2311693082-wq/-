@@ -52,7 +52,7 @@ function isHiddenTag(attrs) {
   if (attribute(attrs, 'hidden').present || attribute(attrs, 'inert').present) return true;
   if (attribute(attrs, 'aria-hidden').value.toLowerCase() === 'true') return true;
   const style = attribute(attrs, 'style').value;
-  return /(?:^|;)\s*(?:display\s*:\s*none|visibility\s*:\s*hidden|content-visibility\s*:\s*hidden|opacity\s*:\s*0(?:\s|!|;|$))/i.test(style);
+  return /(?:^|;)\s*(?:display\s*:\s*none|visibility\s*:\s*hidden|content-visibility\s*:\s*hidden|opacity\s*:\s*0+(?:\.0+)?(?:\s*!important)?(?=;|$))/i.test(style);
 }
 
 /**
