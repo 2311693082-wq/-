@@ -25,6 +25,8 @@ jobs:
           node --check data/siteContent.js
       - name: Generate static site without npm install
         run: node preview-server.mjs --write
+      - name: Ensure committed preview matches generator
+        run: git diff --exit-code -- preview.html
       - name: Check performance and content invariants
         run: |
           node --input-type=module -e '
