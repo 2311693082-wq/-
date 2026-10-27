@@ -6,6 +6,8 @@ on:
       - "preview.html"
       - "data/**"
       - "start-site.command"
+      - "package.json"
+      - "vercel.json"
       - ".github/workflows/preview-smoke.yml"
   push:
     branches: [main]
@@ -32,6 +34,12 @@ jobs:
             assert.match(html, /<html lang="zh-CN">/);
             assert.match(html, /rel="preload" as="image"/);
             assert.match(html, /fetchpriority="high"/);
+            assert.match(html, /srcset="[^"]+640w, [^"]+1200w"/);
+            assert.match(html, /media="\(min-width: 901px\)"/);
+            assert.equal(html, readFileSync("dist/index.html", "utf8"));
+            assert.doesNotMatch(html, /请替换|待更新|立即预约<\/a>/);
+            assert.doesNotMatch(html, /储值金奖励|免费体验券/);
+            assert.match(html, /不可兑换现金、实物或有价券/);
             assert.equal((html.match(/<img /g) || []).length, 7);
             assert.equal((html.match(/loading="lazy"/g) || []).length, 6);
             assert.doesNotMatch(html, /黑金俱乐部/);
