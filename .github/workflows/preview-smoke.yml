@@ -1,0 +1,40 @@
+name: Static website smoke test
+on:
+  pull_request:
+    paths:
+      - "preview-server.mjs"
+      - "preview.html"
+      - "data/**"
+      - "start-site.command"
+      - ".github/workflows/preview-smoke.yml"
+  push:
+    branches: [main]
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - name: Validate syntax
+        run: |
+          node --check preview-server.mjs
+          node --check data/siteContent.js
+      - name: Generate static site without npm install
+        run: node preview-server.mjs --write
+      - name: Check performance and content invariants
+        run: |
+          node --input-type=module -e '
+            import { readFileSync } from "node:fs";
+            import assert from "node:assert/strict";
+            const html = readFileSync("preview.html", "utf8");
+            assert.match(html, /<html lang="zh-CN">/);
+            assert.match(html, /rel="preload" as="image"/);
+            assert.match(html, /fetchpriority="high"/);
+            assert.equal((html.match(/<img /g) || []).length, 7);
+            assert.equal((html.match(/loading="lazy"/g) || []).length, 6);
+            assert.doesNotMatch(html, /黑金俱乐部/);
+            assert.match(html, /15:00 - 02:00/);
+            console.log("Static preview smoke test passed.");
+          '
