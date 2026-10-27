@@ -8,6 +8,7 @@ export const site = {
   bookingText: "查看预约方式",
   heroImage: "https://images.unsplash.com/photo-1558501649-ffd87be06251?auto=format&fit=crop&w=1200&q=72",
   heroMobileImage: "https://images.unsplash.com/photo-1558501649-ffd87be06251?auto=format&fit=crop&w=640&q=68",
+  creatorMobileImage: "https://images.unsplash.com/photo-1745052813475-77e40d507536?auto=format&fit=crop&w=480&q=68",
   creatorImage: "https://images.unsplash.com/photo-1745052813475-77e40d507536?auto=format&fit=crop&w=960&q=72",
   contact: {
     address: "无锡市 · 详细地址请以门店官方信息为准",
