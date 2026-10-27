@@ -5,13 +5,14 @@ export const site = {
   city: "无锡",
   slogan: "夜色入局，举杯成党",
   heroLead: "一间把鸡尾酒、赛事扑克、酒局麻将、萌宠陪玩和年轻人社交聚在一起的黑金酒馆。",
-  bookingText: "预约入局",
+  bookingText: "查看预约方式",
   heroImage: "https://images.unsplash.com/photo-1558501649-ffd87be06251?auto=format&fit=crop&w=1200&q=72",
+  heroMobileImage: "https://images.unsplash.com/photo-1558501649-ffd87be06251?auto=format&fit=crop&w=640&q=68",
   creatorImage: "https://images.unsplash.com/photo-1745052813475-77e40d507536?auto=format&fit=crop&w=960&q=72",
   contact: {
-    address: "无锡市 · 黑桃党聚会空间（详细地址待更新）",
+    address: "无锡市 · 详细地址请以门店官方信息为准",
     hours: "15:00 - 02:00",
-    booking: "微信 / 电话预约：请替换为你的联系方式"
+    booking: "请通过门店官方社群咨询预约"
   }
 };
 export const introStats = [
@@ -32,7 +33,7 @@ export const creatorOffers = [
   "可预约拍摄时段、特色吧台、黑金牌桌和聚会场景"
 ];
 export const benefits = [
-  { title: "新客鸡尾酒 2 杯", text: "到店即可领取双杯微醺礼，适合朋友同行开场。" },
-  { title: "会员专属储值金奖励", text: "成为会员后享受专属储值权益，适合高频聚会玩家。" },
-  { title: "扑克首次免费体验券", text: "首次体验赛事扑克可领取入门券，含基础规则说明。" }
+  { title: "酒水餐食", text: "以门店实际菜单及当日供应为准，欢迎到店享受轻松聚会。" },
+  { title: "会员消费权益", text: "如有会员优惠，以门店公示规则及本人账户内权益为准，不支持转让。" },
+  { title: "娱乐记分说明", text: "活动记分不可购买、出售、转让、借用，也不可兑换现金、实物或有价券。" }
 ];
