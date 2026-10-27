@@ -14,7 +14,7 @@ assert.ok(html.includes('a:focus-visible{outline:3px solid'), 'Keyboard focus ou
 // preconnect may warm a different connection pool and waste a socket.
 assert.ok(html.includes('<link rel="preconnect" href="https://images.unsplash.com">'),
   'Image CDN preconnect must match non-CORS image requests');
-assert.doesNotMatch(html, /<link\\b[^>]*rel=["']preconnect["'][^>]*crossorigin/i,
+assert.doesNotMatch(html, /<link\b[^>]*rel=["']preconnect["'][^>]*crossorigin/i,
   'Avoid a CORS preconnect for non-CORS images');
 const bytes = Buffer.byteLength(html, 'utf8');
 const maxBytes = 28 * 1024;
