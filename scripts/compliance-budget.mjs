@@ -80,7 +80,7 @@ export function extractVisibleLines(html, { includeHidden = false } = {}) {
       if (index !== -1) {
         const wasHidden = stack.some(frame => frame.hidden);
         stack.length = index;
-        if (BLOCK_TAGS.has(name) && !wasHidden) output.push('\n');
+        if (BLOCK_TAGS.has(name) && !wasHidden) output.push(null);
       }
       continue;
     }
@@ -90,14 +90,26 @@ export function extractVisibleLines(html, { includeHidden = false } = {}) {
     const attrs = opening[2];
     const hidden = !includeHidden && isHiddenTag(attrs);
     const parentHidden = stack.some(frame => frame.hidden);
-    if (name === 'br' && !hidden && !parentHidden) output.push('\n');
+    if (name === 'br' && !hidden && !parentHidden) output.push(' ');
     if (!VOID_TAGS.has(name) && !/\/\s*>$/.test(token)) stack.push({ name, hidden });
   }
-  return decodeEntities(output.join('')).normalize('NFKC')
-    .replace(/[\p{Cf}\u034F\uFE0E\uFE0F]/gu, '')
-    .split(/\r?\n/)
-    .map(line => line.replace(/\s+/g, ''))
-    .filter(Boolean);
+  // Only structural block boundaries separate lines. Whitespace inside a
+  // text node, <br>, or an encoded newline must never split a promotion in two.
+  const lines = [];
+  let chunk = '';
+  const flush = () => {
+    const normalized = decodeEntities(chunk).normalize('NFKC')
+      .replace(/[\p{Cf}\u034F\uFE0E\uFE0F]/gu, '')
+      .replace(/\s+/g, '');
+    if (normalized) lines.push(normalized);
+    chunk = '';
+  };
+  for (const part of output) {
+    if (part === null) flush();
+    else chunk += part;
+  }
+  flush();
+  return lines;
 }
 
 export function checkCompliance(html) {
