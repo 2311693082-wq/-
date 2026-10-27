@@ -67,6 +67,9 @@ jobs:
             assert.match(html, /fetchpriority="high"/);
             assert.match(html, /srcset="[^"]+640w, [^"]+1200w"/);
             assert.match(html, /media="\(min-width: 901px\)"/);
+            assert.match(html, /imagesrcset="[^"]+640w, [^"]+1200w"/);
+            assert.match(html, /imagesizes="\(max-width: 900px\) calc\(100vw - 40px\), 520px"/);
+            assert.match(html, /media="\(max-width: 900px\)"/);
             assert.equal(html, readFileSync("dist/index.html", "utf8"));
             assert.doesNotMatch(html, /请替换|待更新|立即预约<\/a>/);
             assert.doesNotMatch(html, /储值金奖励|免费体验券/);
