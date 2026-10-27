@@ -1,0 +1,23 @@
+name: Static performance budget
+on:
+  pull_request:
+    paths:
+      - 'preview-server.mjs'
+      - 'preview.html'
+      - 'data/**'
+      - 'scripts/performance-budget.mjs'
+      - '.github/workflows/performance-budget.yml'
+  push:
+    branches: [main]
+jobs:
+  budget:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Generate static preview
+        run: node preview-server.mjs --write
+      - name: Verify HTML and image performance budgets
+        run: node scripts/performance-budget.mjs dist/index.html
