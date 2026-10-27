@@ -1,5 +1,5 @@
 import http from "node:http";
-import { writeFile } from "node:fs/promises";
+import { mkdir, writeFile } from "node:fs/promises";
 import { benefits, creatorOffers, introStats, plays, site } from "./data/siteContent.js";
 
 const css = `
@@ -94,8 +94,12 @@ const html = `<!doctype html>
 const port = Number(process.env.PORT || 3000);
 
 if (process.argv.includes("--write")) {
-  await writeFile("preview.html", html, "utf8");
-  console.log("已生成 preview.html，可直接用浏览器打开。");
+  await mkdir("dist", { recursive: true });
+  await Promise.all([
+    writeFile("preview.html", html, "utf8"),
+    writeFile("dist/index.html", html, "utf8")
+  ]);
+  console.log("已生成 preview.html 和 dist/index.html，可用于静态部署。");
   process.exit(0);
 }
 
