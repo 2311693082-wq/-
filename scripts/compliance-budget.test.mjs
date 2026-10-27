@@ -62,3 +62,15 @@ test('data-hidden does not hide visible notice; nested inline markup stays reada
   assert.equal(checkCompliance('<p data-hidden="true">活动记分不可购买、<span>出售、转让、借用，也不可兑换现金、实物或有价券。</span></p>').noticePresent, true);
   assert.deepEqual(extractVisibleLines('<div><p hidden>隐藏</p><p>公开<span>活动</span></p></div>'), ['公开活动']);
 });
+
+test('newlines, HTML line breaks and encoded whitespace cannot split a prohibited phrase', () => {
+  for (const promotion of [
+    '积分可\n兑换现金',
+    '积分可\r\n兑换现金',
+    '积分可&#10;兑换现金',
+    '积分可<br>兑换现金',
+    '积分可<span>\n</span>兑换现金',
+    '积分可&#x9;兑换现金'
+  ]) assert.throws(() => checkCompliance(html(`<p>${promotion}</p>`)), /Prohibited points\/prize promotion/, promotion);
+  assert.deepEqual(extractVisibleLines('<p>积分可\n兑换现金</p><p>普通活动</p>'), ['积分可兑换现金', '普通活动']);
+});
