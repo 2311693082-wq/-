@@ -99,3 +99,20 @@ test('metadata and accessibility attributes cannot satisfy visible disclosure', 
 test('neutral metadata and accessible names remain allowed', () => {
   assert.equal(checkCompliance(html('<meta name="description" content="无锡夜生活与朋友聚会"><img alt="酒馆环境">')).noticePresent, true);
 });
+
+
+test('document title cannot advertise points exchange or serve as visible disclosure', () => {
+  const doc = title => '<html><head><title>' + title + '</title></head><body><p>' + REQUIRED_NOTICE + '</p>酒馆活动</body></html>';
+  for (const title of ['积分可以兑换现金', '积&#x5206;能够换实物', '计分牌可用于兑换酒水']) {
+    assert.throws(() => checkCompliance(doc(title)), /Prohibited points\/prize promotion/, title);
+  }
+  assert.equal(checkCompliance(doc('黑桃酒馆社交聚会')).noticePresent, true);
+  assert.throws(() => checkCompliance('<html><head><title>' + REQUIRED_NOTICE + '</title></head><body>酒馆活动</body></html>'), /restriction missing/);
+});
+
+test('natural-language points trading claims are blocked while restrictions remain allowed', () => {
+  for (const phrase of ['积分可以兑换现金', '筹码能够换酒水', '计分牌可用于兑换实物', '积分允许转让']) {
+    assert.throws(() => checkCompliance(html('<p>' + phrase + '</p>')), /Prohibited points\/prize promotion/, phrase);
+  }
+  assert.equal(checkCompliance(html('<p>活动记分不可兑换现金，也不可转让。</p>')).noticePresent, true);
+});
