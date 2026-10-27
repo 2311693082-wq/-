@@ -36,7 +36,7 @@ for (const tag of images) {
 const creator = images.find(tag => tag.includes('alt="年轻人聚会举杯场景"'));
 assert.ok(creator, 'Creator photo must exist');
 assert.match(creator, /srcset="[^"]+w=480[^"]+ 480w, [^"]+w=960[^"]+ 960w"/);
-assert.match(creator, /sizes="\\(max-width: 900px\\) calc\\(100vw - 64px\\), 560px"/);
+assert.ok(creator.includes('sizes="(max-width: 900px) calc(100vw - 64px), 560px"'), 'Creator responsive sizes must match the layout');
 assert.match(creator, /loading="lazy"/);
 const preloads = [...html.matchAll(/<link\b[^>]*rel=["']preload["'][^>]*as=["']image["'][^>]*>/gi)];
 assert.equal(preloads.length, 2, 'Use separate desktop and mobile hero preload hints');
