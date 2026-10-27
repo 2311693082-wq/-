@@ -7,6 +7,9 @@ import assert from 'node:assert/strict';
 
 const file = process.argv[2] || 'dist/index.html';
 const html = readFileSync(file, 'utf8');
+assert.ok(html.includes('<a class="skip-link" href="#main">跳转到主要内容</a>'), 'Keyboard skip link must target main');
+assert.ok(html.includes('<main id="main">') && html.includes('</main>'), 'Main landmark required');
+assert.ok(html.includes('a:focus-visible{outline:3px solid'), 'Keyboard focus outline must remain visible');
 const bytes = Buffer.byteLength(html, 'utf8');
 const maxBytes = 28 * 1024;
 assert.ok(bytes <= maxBytes, `HTML exceeded ${maxBytes} byte budget: ${bytes}`);
