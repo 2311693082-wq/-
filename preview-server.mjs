@@ -27,7 +27,7 @@ const html = `<!doctype html>
   <title>黑桃党 | 无锡酒馆扑克麻将聚会空间</title>
   <meta name="description" content="黑桃党是无锡面向年轻人的黑金酒馆、专业赛事扑克、酒局麻将、萌宠陪玩和探店合作聚会空间。">
   <link rel="preconnect" href="https://images.unsplash.com" crossorigin>
-  <link rel="preload" as="image" href="${site.heroImage}" media="(min-width: 901px)" fetchpriority="high">
+  <link rel="preload" as="image" href="${site.heroImage}" imagesrcset="${site.heroMobileImage} 640w, ${site.heroImage} 1200w" imagesizes="(max-width: 900px) calc(100vw - 40px), 520px" media="(min-width: 901px)" fetchpriority="high">
   <link rel="preload" as="image" imagesrcset="${site.heroMobileImage} 640w, ${site.heroImage} 1200w" imagesizes="(max-width: 900px) calc(100vw - 40px), 520px" media="(max-width: 900px)" fetchpriority="high">
   <style>${css}</style>
 </head>
@@ -40,7 +40,7 @@ const html = `<!doctype html>
     </div>
   </header>
   <section id="top" class="hero">
-    <div class="hero-bg" style="background-image:url('${site.heroImage}')"></div>
+    <div class="hero-bg" style="background-image:url('${site.heroMobileImage}')"></div>
     <div class="container hero-grid">
       <div>
         <div class="pill"><span class="dot"></span>${site.city} · Cocktail / Poker / Mahjong</div>
