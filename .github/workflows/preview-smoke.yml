@@ -7,6 +7,7 @@ on:
       - "data/**"
       - "start-site.command"
       - "package.json"
+      - "package-lock.json"
       - "vercel.json"
       - ".github/workflows/preview-smoke.yml"
   push:
@@ -19,6 +20,11 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "24"
+      - name: Validate dependency-free install
+        run: |
+          npm ci --ignore-scripts --no-audit --no-fund
+          npm ls --depth=0
+          node --input-type=module -e 'import p from "./package.json" with {type:"json"}; if (Object.keys(p.dependencies||{}).length || Object.keys(p.devDependencies||{}).length) process.exit(1);'
       - name: Validate syntax
         run: |
           node --check preview-server.mjs
