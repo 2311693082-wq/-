@@ -10,10 +10,10 @@ import { fileURLToPath } from 'node:url';
 
 export const REQUIRED_NOTICE = '活动记分不可购买、出售、转让、借用，也不可兑换现金、实物或有价券。';
 const FORBIDDEN_PROMOTIONS = [
-  /(?:积分|计分牌|筹码)(?:可|能|支持|直接)?(?:购买|充值|兑换|出售|转让|交易|提现|抵扣)/i,
+  /(?:积分|计分牌|筹码)(?:可以|能够|可用于|可用来|可|能|支持|直接|允许|用于|用来)?(?:购买|充值|兑换|出售|转让|交易|提现|抵扣)/i,
   /(?:现金|实物|有价券)(?:奖励|兑换|返还)/i,
   /(?:购买|充值)(?:积分|计分牌|筹码)/i,
-  /(?:积分|筹码|计分牌)(?:换取|换成|换)(?:现金|奖品|实物|有价券|酒水|饮品|餐食)/i
+  /(?:积分|筹码|计分牌)(?:可以|能够|可|能|直接)?(?:换取|换成|换)(?:现金|奖品|实物|有价券|酒水|饮品|餐食)/i
 ];
 const ENTITY_NAMES = Object.freeze({
   amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ',
@@ -120,6 +120,10 @@ function extractPromotionalAttributes(html) {
     .replace(/<(script|style|template|svg|noscript)\b[^>]*>[\s\S]*?<\/\1\s*>/gi, '');
   const tags = source.match(/<(?:(?:"[^"]*"|'[^']*'|[^'">])*)>/g) || [];
   const values = [];
+  // Document titles are exposed in tabs and search results, not on-page notices.
+  for (const match of source.matchAll(/<title\b[^>]*>([\s\S]*?)<\/title\s*>/gi)) {
+    values.push(match[1].replace(/<[^>]*>/g, ''));
+  }
   for (const tag of tags) {
     const opening = /^<\s*([a-z][\w:-]*)\b([\s\S]*?)\/?>$/i.exec(tag);
     if (!opening) continue;
