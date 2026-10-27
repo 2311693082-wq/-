@@ -104,17 +104,33 @@ if (process.argv.includes("--write")) {
 }
 
 const server = http.createServer((request, response) => {
-  if (request.url === "/favicon.ico") {
-    response.writeHead(204);
+  const method = request.method || "GET";
+  const headers = {
+    "Cache-Control": "no-store",
+    "X-Content-Type-Options": "nosniff"
+  };
+  if (method !== "GET" && method !== "HEAD") {
+    response.writeHead(405, { ...headers, Allow: "GET, HEAD" });
     response.end();
     return;
   }
-
+  const path = (request.url || "/").split("?")[0];
+  if (path === "/favicon.ico") {
+    response.writeHead(204, headers);
+    response.end();
+    return;
+  }
+  if (path !== "/" && path !== "/index.html") {
+    response.writeHead(404, { ...headers, "Content-Type": "text/plain; charset=utf-8" });
+    response.end(method === "HEAD" ? undefined : "Not Found");
+    return;
+  }
   response.writeHead(200, {
+    ...headers,
     "Content-Type": "text/html; charset=utf-8",
-    "Cache-Control": "no-store"
+    "Content-Length": Buffer.byteLength(html)
   });
-  response.end(html);
+  response.end(method === "HEAD" ? undefined : html);
 });
 
 server.listen(port, process.env.HOST || "127.0.0.1", () => {
