@@ -6,6 +6,8 @@ on:
       - 'preview.html'
       - 'data/**'
       - 'scripts/performance-budget.mjs'
+      - 'scripts/compliance-budget.mjs'
+      - 'scripts/compliance-budget.test.mjs'
       - '.github/workflows/performance-budget.yml'
   push:
     branches: [main]
@@ -21,3 +23,7 @@ jobs:
         run: node preview-server.mjs --write
       - name: Verify HTML and image performance budgets
         run: node scripts/performance-budget.mjs dist/index.html
+      - name: Verify entertainment-points compliance rules
+        run: |
+          node --test scripts/compliance-budget.test.mjs
+          node scripts/compliance-budget.mjs dist/index.html
