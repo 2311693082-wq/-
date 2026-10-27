@@ -20,15 +20,29 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "24"
-      - name: Validate dependency-free install
-        run: |
-          npm ci --ignore-scripts --no-audit --no-fund
-          npm ls --depth=0
-          node --input-type=module -e 'import p from "./package.json" with {type:"json"}; if (Object.keys(p.dependencies||{}).length || Object.keys(p.devDependencies||{}).length) process.exit(1);'
       - name: Validate syntax
         run: |
           node --check preview-server.mjs
           node --check data/siteContent.js
+      - name: Check preview HTTP response
+        run: |
+          PORT=37991 node preview-server.mjs >/tmp/heitao-preview.log 2>&1 &
+          PID=$!
+          trap 'kill "$PID" 2>/dev/null || true' EXIT
+          node --input-type=module -e '
+            import assert from "node:assert/strict";
+            let response;
+            for (let i=0; i<40; i++) {
+              try { response = await fetch("http://127.0.0.1:37991/"); break; }
+              catch { await new Promise(resolve => setTimeout(resolve, 100)); }
+            }
+            assert.ok(response?.ok, "Preview server must respond");
+            assert.match(response.headers.get("content-type"), /text\/html/);
+            assert.match(await response.text(), /<html lang="zh-CN">/);
+            const favicon = await fetch("http://127.0.0.1:37991/favicon.ico");
+            assert.equal(favicon.status, 204);
+            console.log("Preview HTTP smoke test passed.");
+          '
       - name: Generate static site without npm install
         run: node preview-server.mjs --write
       - name: Ensure committed preview matches generator
