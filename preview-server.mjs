@@ -9,7 +9,7 @@ const playCards = plays
   .map(
     (play, index) => `
       <article class="card play-card">
-        <div class="image"><img src="${play.image}" alt="${play.title}" width="640" height="440" loading="lazy" decoding="async" sizes="(max-width: 900px) 100vw, 33vw"></div>
+        <div class="image"><img src="${play.image}" srcset="${play.image.replace("w=640&q=72", "w=360&q=64")} 360w, ${play.image} 640w" alt="${play.title}" width="640" height="440" loading="lazy" decoding="async" sizes="(max-width: 900px) calc(100vw - 40px), (max-width: 1180px) calc(33.333vw - 24px), 370px"></div>
         <div class="play-content">
           <div class="eyebrow">${play.kicker} · 0${index + 1}</div>
           <h3>${play.title}</h3>

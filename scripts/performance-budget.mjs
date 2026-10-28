@@ -31,6 +31,18 @@ for (const tag of images) {
   assert.match(tag, /\bheight=["']\d+["']/i, 'Image height prevents layout shift');
   assert.match(tag, /\bdecoding=["']async["']/i);
 }
+// The five below-the-fold play cards use a 360w candidate on small/1x
+// screens, while retaining 640w for higher-density displays.
+const playImages = images.filter(tag => /width="640" height="440"/.test(tag));
+assert.equal(playImages.length, 5, 'Expected five play-card images');
+for (const tag of playImages) {
+  const source = tag.match(/\bsrc="([^"]+)"/)?.[1];
+  const srcset = tag.match(/\bsrcset="([^"]+)"/)?.[1];
+  assert.ok(source && srcset, 'Play cards need responsive srcset');
+  assert.equal(srcset, `${source.replace('w=640&q=72', 'w=360&q=64')} 360w, ${source} 640w`,
+    'Play-card srcset must use the same photo at bounded sizes');
+  assert.ok(tag.includes('sizes="(max-width: 900px) calc(100vw - 40px), (max-width: 1180px) calc(33.333vw - 24px), 370px"'), 'Play-card sizes must reflect actual grid widths');
+}
 // Creator section is below the fold: allow a smaller 480w candidate on
 // narrow/low-density displays instead of always fetching the 960w source.
 const creator = images.find(tag => tag.includes('alt="年轻人聚会举杯场景"'));
