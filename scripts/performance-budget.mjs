@@ -36,8 +36,8 @@ for (const tag of images) {
 const playImages = images.filter(tag => /width="640" height="440"/.test(tag));
 assert.equal(playImages.length, 5, 'Expected five play-card images');
 for (const tag of playImages) {
-  const source = tag.match(/\\bsrc="([^"]+)"/)?.[1];
-  const srcset = tag.match(/\\bsrcset="([^"]+)"/)?.[1];
+  const source = tag.match(/\bsrc="([^"]+)"/)?.[1];
+  const srcset = tag.match(/\bsrcset="([^"]+)"/)?.[1];
   assert.ok(source && srcset, 'Play cards need responsive srcset');
   assert.equal(srcset, `${source.replace('w=640&q=72', 'w=360&q=64')} 360w, ${source} 640w`,
     'Play-card srcset must use the same photo at bounded sizes');
