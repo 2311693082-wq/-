@@ -27,8 +27,8 @@ const html = `<!doctype html>
   <title>黑桃党 | 无锡酒馆扑克麻将聚会空间</title>
   <meta name="description" content="黑桃党是无锡面向年轻人的黑金酒馆、专业赛事扑克、酒局麻将、萌宠陪玩和探店合作聚会空间。">
   <link rel="preconnect" href="https://images.unsplash.com">
-  <link rel="preload" as="image" href="${site.heroImage}" imagesrcset="${site.heroMobileImage} 640w, ${site.heroMediumImage} 960w, ${site.heroImage} 1200w" imagesizes="(max-width: 900px) min(calc(100vw - 40px), 440px), 520px" media="(min-width: 901px)" fetchpriority="high">
-  <link rel="preload" as="image" imagesrcset="${site.heroMobileImage} 640w, ${site.heroMediumImage} 960w, ${site.heroImage} 1200w" imagesizes="(max-width: 900px) min(calc(100vw - 40px), 440px), 520px" media="(max-width: 900px)" fetchpriority="high">
+  <link rel="preload" as="image" href="${site.heroImage}" imagesrcset="${site.heroMobileImage} 640w, ${site.heroMediumImage} 960w, ${site.heroImage} 1200w" imagesizes="(max-width: 900px) min(calc(100vw - 82px), 398px), 478px" media="(min-width: 901px)" fetchpriority="high">
+  <link rel="preload" as="image" imagesrcset="${site.heroMobileImage} 640w, ${site.heroMediumImage} 960w, ${site.heroImage} 1200w" imagesizes="(max-width: 900px) min(calc(100vw - 82px), 398px), 478px" media="(max-width: 900px)" fetchpriority="high">
   <style>${css}</style>
 </head>
 <body>
@@ -53,7 +53,7 @@ const html = `<!doctype html>
       </div>
       <div class="hero-card">
         <div class="hero-card-inner">
-          <img src="${site.heroImage}" srcset="${site.heroMobileImage} 640w, ${site.heroMediumImage} 960w, ${site.heroImage} 1200w" sizes="(max-width: 900px) min(calc(100vw - 40px), 440px), 520px" alt="黑金酒吧空间氛围" width="900" height="1125" fetchpriority="high" decoding="async">
+          <img src="${site.heroImage}" srcset="${site.heroMobileImage} 640w, ${site.heroMediumImage} 960w, ${site.heroImage} 1200w" sizes="(max-width: 900px) min(calc(100vw - 82px), 398px), 478px" alt="黑金酒吧空间氛围" width="900" height="1125" fetchpriority="high" decoding="async">
           <div class="hero-caption"><small>Members Night</small><h2>酒局开始前，先入座。 <span class="spade">♠</span></h2></div>
         </div>
       </div>
