@@ -13,7 +13,7 @@ const image = (width, bytes = 48000) => ({
 test("accepts one successfully loaded 640w hero and reports transferred bytes", () => {
   const report = makeReport([image(640), { url: "https://example.com/", resourceType: "Document" }]);
   assert.deepEqual(inspectMobileHero(report), { width: 640, bytes: 48000 });
-  assert.match(summarizeMobileHero([report]), /640w \\| 46\\.9 KiB/);
+  assert.ok(summarizeMobileHero([report]).includes("| 1 | 640w | 46.9 KiB |"));
 });
 
 test("rejects an oversized 1200w mobile hero", () => {
