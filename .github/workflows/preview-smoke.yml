@@ -65,9 +65,9 @@ jobs:
             assert.match(html, /<html lang="zh-CN">/);
             assert.match(html, /rel="preload" as="image"/);
             assert.match(html, /fetchpriority="high"/);
-            assert.match(html, /srcset="[^"]+640w, [^"]+960w, [^"]+1200w"/);
+            assert.match(html, /srcset="[^"]+360w, [^"]+640w, [^"]+960w, [^"]+1200w"/);
             assert.match(html, /media="\(min-width: 901px\)"/);
-            assert.match(html, /imagesrcset="[^"]+640w, [^"]+960w, [^"]+1200w"/);
+            assert.match(html, /imagesrcset="[^"]+360w, [^"]+640w, [^"]+960w, [^"]+1200w"/);
             assert.match(html, /imagesizes="\(max-width: 900px\) min\(calc\(100vw - 82px\), 398px\), 478px"/);
             assert.match(html, /media="\(max-width: 900px\)"/);
             assert.equal(html, readFileSync("dist/index.html", "utf8"));

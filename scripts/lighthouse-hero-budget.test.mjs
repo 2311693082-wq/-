@@ -16,6 +16,10 @@ test("accepts one successfully loaded 640w hero and reports transferred bytes", 
   assert.ok(summarizeMobileHero([report]).includes("| 1 | 640w | 46.9 KiB |"));
 });
 
+test("accepts a 360w hero on low-density narrow mobile screens", () => {
+  assert.deepEqual(inspectMobileHero(makeReport([image(360, 22000)])), { width: 360, bytes: 22000 });
+});
+
 test("rejects an oversized 1200w mobile hero", () => {
   assert.throws(() => inspectMobileHero(makeReport([image(1200)])), /at most 640w/);
 });

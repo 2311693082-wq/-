@@ -84,9 +84,11 @@ assert.equal(attr(desktopPreload, 'imagesizes'), attr(hero, 'sizes'),
 // avoids selecting a 1200w file solely because the viewport is tablet-sized.
 const expectedHeroSizes = '(max-width: 900px) min(calc(100vw - 82px), 398px), 478px';
 assert.equal(attr(hero, 'sizes'), expectedHeroSizes);
+// A 360w source lets low-density narrow screens avoid fetching the 640w asset.
+assert.ok(attr(hero, 'srcset').includes('w=360&q=64 360w'));
 const mobilePreload = preloads.find(match => match[0].includes('media="(max-width: 900px)"'))?.[0];
 assert.ok(mobilePreload, 'Mobile preload must exist');
-assert.match(attr(hero, 'srcset'), /w=640[^,]* 640w, [^,]*w=960[^,]* 960w, [^,]*w=1200[^,]* 1200w$/);
+assert.match(attr(hero, 'srcset'), /w=360[^,]* 360w, [^,]*w=640[^,]* 640w, [^,]*w=960[^,]* 960w, [^,]*w=1200[^,]* 1200w$/);
 for (const preload of [desktopPreload, mobilePreload]) {
   assert.equal(attr(preload, 'imagesrcset'), attr(hero, 'srcset'));
   assert.equal(attr(preload, 'imagesizes'), expectedHeroSizes);
