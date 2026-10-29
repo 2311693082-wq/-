@@ -61,7 +61,7 @@ assert.ok(creator.includes('sizes="(max-width: 900px) calc(100vw - 40px), (max-w
 assert.match(creator, /loading="lazy"/);
 const preloads = [...html.matchAll(/<link\b[^>]*rel=["']preload["'][^>]*as=["']image["'][^>]*>/gi)];
 assert.equal(preloads.length, 2, 'Use separate desktop and mobile hero preload hints');
-assert.match(html, /imagesrcset=["'][^"']+640w, [^"']+1200w["']/i);
+assert.match(html, /imagesrcset=["'][^"']+640w, [^"']+960w, [^"']+1200w["']/i);
 const urls = [...html.matchAll(/https:\/\/images\.unsplash\.com\/[^\s"'<>)]*/g)].map(x => x[0]);
 assert.ok(urls.length >= 7, 'Expected remote image references');
 for (const url of urls) {
@@ -80,6 +80,17 @@ assert.equal(attr(desktopPreload, 'imagesrcset'), attr(hero, 'srcset'),
   'Desktop preload must select the same responsive resource as hero img');
 assert.equal(attr(desktopPreload, 'imagesizes'), attr(hero, 'sizes'),
   'Desktop preload and hero img sizes must match');
+// The mobile hero card has a 440px max-width. Matching the actual slot
+// avoids selecting a 1200w file solely because the viewport is tablet-sized.
+const expectedHeroSizes = '(max-width: 900px) min(calc(100vw - 40px), 440px), 520px';
+assert.equal(attr(hero, 'sizes'), expectedHeroSizes);
+const mobilePreload = preloads.find(match => match[0].includes('media="(max-width: 900px)"'))?.[0];
+assert.ok(mobilePreload, 'Mobile preload must exist');
+assert.match(attr(hero, 'srcset'), /w=640[^,]* 640w, [^,]*w=960[^,]* 960w, [^,]*w=1200[^,]* 1200w$/);
+for (const preload of [desktopPreload, mobilePreload]) {
+  assert.equal(attr(preload, 'imagesrcset'), attr(hero, 'srcset'));
+  assert.equal(attr(preload, 'imagesizes'), expectedHeroSizes);
+}
 const bgTag = html.match(/<div class="hero-bg"[^>]*>/)?.[0];
 const background = bgTag?.split("url('")[1]?.split("')")[0];
 assert.ok(background, 'Expected hero background');
