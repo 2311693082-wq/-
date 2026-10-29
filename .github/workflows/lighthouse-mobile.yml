@@ -1,0 +1,67 @@
+name: Lighthouse mobile baseline
+
+on:
+  pull_request:
+    paths:
+      - 'preview-server.mjs'
+      - 'preview.html'
+      - 'data/**'
+      - 'scripts/lighthouse-summary.mjs'
+      - 'scripts/lighthouse-summary.test.mjs'
+      - '.github/workflows/lighthouse-mobile.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: lighthouse-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  mobile-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Test Lighthouse report summarizer
+        run: node --test scripts/lighthouse-summary.test.mjs
+      - name: Start local static preview
+        run: |
+          node preview-server.mjs > /tmp/heitao-preview.log 2>&1 &
+          for i in $(seq 1 30); do
+            if curl --fail --silent http://127.0.0.1:3000/ --output /dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+          cat /tmp/heitao-preview.log
+          exit 1
+      - name: Measure mobile performance
+        run: |
+          npm exec --yes --package=lighthouse@12 -- lighthouse http://127.0.0.1:3000/ \
+            --only-categories=performance \
+            --form-factor=mobile \
+            --chrome-flags="--headless --no-sandbox --disable-dev-shm-usage" \
+            --output=json \
+            --output-path=./lighthouse-mobile.json \
+            --quiet
+      - name: Publish metric summary
+        if: always()
+        run: |
+          if [ -f lighthouse-mobile.json ]; then
+            node scripts/lighthouse-summary.mjs lighthouse-mobile.json >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "Lighthouse report was not produced. Inspect the audit step logs." >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - name: Save raw Lighthouse JSON
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-mobile-report
+          path: lighthouse-mobile.json
+          if-no-files-found: warn
+          retention-days: 7
