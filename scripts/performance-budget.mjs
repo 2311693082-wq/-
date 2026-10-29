@@ -80,9 +80,9 @@ assert.equal(attr(desktopPreload, 'imagesrcset'), attr(hero, 'srcset'),
   'Desktop preload must select the same responsive resource as hero img');
 assert.equal(attr(desktopPreload, 'imagesizes'), attr(hero, 'sizes'),
   'Desktop preload and hero img sizes must match');
-// The mobile hero card has a 440px max-width. Matching the actual slot
+// The mobile hero image is 398px at most after 20px padding and 1px borders. Matching the slot
 // avoids selecting a 1200w file solely because the viewport is tablet-sized.
-const expectedHeroSizes = '(max-width: 900px) min(calc(100vw - 40px), 440px), 520px';
+const expectedHeroSizes = '(max-width: 900px) min(calc(100vw - 82px), 398px), 478px';
 assert.equal(attr(hero, 'sizes'), expectedHeroSizes);
 const mobilePreload = preloads.find(match => match[0].includes('media="(max-width: 900px)"'))?.[0];
 assert.ok(mobilePreload, 'Mobile preload must exist');
