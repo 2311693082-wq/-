@@ -16,6 +16,9 @@ assert.ok(html.includes('<link rel="preconnect" href="https://images.unsplash.co
   'Image CDN preconnect must match non-CORS image requests');
 assert.doesNotMatch(html, /<link\b[^>]*rel=["']preconnect["'][^>]*crossorigin/i,
   'Avoid a CORS preconnect for non-CORS images');
+// The hero image wrapper must fill a stable grid track before the image loads.
+assert.ok(html.includes('.hero-card{position:relative;max-width:520px;width:100%;margin:auto'),
+  'Hero card must have an explicit width to avoid intrinsic-size layout shifts');
 const bytes = Buffer.byteLength(html, 'utf8');
 const maxBytes = 28 * 1024;
 assert.ok(bytes <= maxBytes, `HTML exceeded ${maxBytes} byte budget: ${bytes}`);
