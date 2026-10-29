@@ -47,8 +47,10 @@ for (const tag of playImages) {
 // narrow/low-density displays instead of always fetching the 960w source.
 const creator = images.find(tag => tag.includes('alt="年轻人聚会举杯场景"'));
 assert.ok(creator, 'Creator photo must exist');
-assert.match(creator, /srcset="[^"]+w=480[^"]+ 480w, [^"]+w=960[^"]+ 960w"/);
-assert.ok(creator.includes('sizes="(max-width: 900px) calc(100vw - 64px), 560px"'), 'Creator responsive sizes must match the layout');
+assert.match(creator, /srcset="[^"]+w=480[^"]+ 480w, [^"]+w=640[^"]+ 640w, [^"]+w=960[^"]+ 960w"/);
+// Mobile creator fills the 20px-padded container; desktop uses a .95fr / 1.05fr
+// grid with a 42px gap, giving (viewport - 82px) * .475 until 1180px.
+assert.ok(creator.includes('sizes="(max-width: 900px) calc(100vw - 40px), (max-width: 1180px) calc(47.5vw - 38.95px), 522px"'), 'Creator responsive sizes must match the layout');
 assert.match(creator, /loading="lazy"/);
 const preloads = [...html.matchAll(/<link\b[^>]*rel=["']preload["'][^>]*as=["']image["'][^>]*>/gi)];
 assert.equal(preloads.length, 2, 'Use separate desktop and mobile hero preload hints');

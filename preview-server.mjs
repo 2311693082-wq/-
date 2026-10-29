@@ -73,7 +73,7 @@ const html = `<!doctype html>
   </section>
   <section id="creator" class="section">
     <div class="container creator">
-      <div class="creator-img"><img src="${site.creatorImage}" srcset="${site.creatorMobileImage} 480w, ${site.creatorImage} 960w" sizes="(max-width: 900px) calc(100vw - 64px), 560px" alt="年轻人聚会举杯场景" width="960" height="720" loading="lazy" decoding="async"></div>
+      <div class="creator-img"><img src="${site.creatorImage}" srcset="${site.creatorMobileImage} 480w, ${site.creatorMediumImage} 640w, ${site.creatorImage} 960w" sizes="(max-width: 900px) calc(100vw - 40px), (max-width: 1180px) calc(47.5vw - 38.95px), 522px" alt="年轻人聚会举杯场景" width="960" height="720" loading="lazy" decoding="async"></div>
       <div><div class="eyebrow">Collab</div><h2 class="title">小红书 / 大众点评达人，欢迎来探店。</h2><p class="desc">我们提供更有镜头感的黑金灯光、吧台场景、牌桌氛围和聚会内容，适合城市夜生活、酒馆、棋牌、宠物友好和年轻社交方向内容。</p><ul>${creatorOffers.map((offer) => `<li>${offer}</li>`).join("")}</ul><a class="btn primary" href="#contact">预约探店合作</a></div>
     </div>
   </section>
