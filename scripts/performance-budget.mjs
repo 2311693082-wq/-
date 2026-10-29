@@ -19,6 +19,10 @@ assert.doesNotMatch(html, /<link\b[^>]*rel=["']preconnect["'][^>]*crossorigin/i,
 // The hero image wrapper must fill a stable grid track before the image loads.
 assert.ok(html.includes('.hero-card{position:relative;max-width:520px;width:100%;margin:auto'),
   'Hero card must have an explicit width to avoid intrinsic-size layout shifts');
+// Mobile fixed overlays and backdrop blurs can trigger extra paint/composite
+// work on constrained devices; keep the mobile surface opaque and cheap.
+assert.ok(html.includes('@media (max-width:900px){body:before{display:none}.glass,.card,.hero-card,.nav,.dock{backdrop-filter:none}.nav,.dock{background:rgba(8,7,10,.96)}}'),
+  'Mobile UI must avoid fixed grid texture and backdrop-filter compositing');
 const bytes = Buffer.byteLength(html, 'utf8');
 const maxBytes = 28 * 1024;
 assert.ok(bytes <= maxBytes, `HTML exceeded ${maxBytes} byte budget: ${bytes}`);
