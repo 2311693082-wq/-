@@ -8,6 +8,8 @@ on:
       - 'data/**'
       - 'scripts/lighthouse-summary.mjs'
       - 'scripts/lighthouse-summary.test.mjs'
+      - 'scripts/lighthouse-hero-budget.mjs'
+      - 'scripts/lighthouse-hero-budget.test.mjs'
       - '.github/workflows/lighthouse-mobile.yml'
   workflow_dispatch:
 
@@ -29,6 +31,8 @@ jobs:
           node-version: '22'
       - name: Test Lighthouse report summarizer
         run: node --test scripts/lighthouse-summary.test.mjs
+      - name: Test mobile hero image network guard
+        run: node --test scripts/lighthouse-hero-budget.test.mjs
       - name: Start local static preview
         run: |
           node preview-server.mjs > /tmp/heitao-preview.log 2>&1 &
@@ -51,6 +55,10 @@ jobs:
               --output-path="./lighthouse-mobile-${i}.json" \
               --quiet
           done
+      - name: Verify requested mobile hero resource
+        run: |
+          set -o pipefail
+          node scripts/lighthouse-hero-budget.mjs lighthouse-mobile-*.json | tee -a "$GITHUB_STEP_SUMMARY"
       - name: Publish metric summary
         if: always()
         run: |
