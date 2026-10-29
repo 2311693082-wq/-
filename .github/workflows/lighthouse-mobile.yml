@@ -40,20 +40,22 @@ jobs:
           done
           cat /tmp/heitao-preview.log
           exit 1
-      - name: Measure mobile performance
+      - name: Measure mobile performance (3 sequential runs)
         run: |
-          npm exec --yes --package=lighthouse@12 -- lighthouse http://127.0.0.1:3000/ \
-            --only-categories=performance \
-            --form-factor=mobile \
-            --chrome-flags="--headless --no-sandbox --disable-dev-shm-usage" \
-            --output=json \
-            --output-path=./lighthouse-mobile.json \
-            --quiet
+          for i in 1 2 3; do
+            npm exec --yes --package=lighthouse@12 -- lighthouse http://127.0.0.1:3000/ \
+              --only-categories=performance \
+              --form-factor=mobile \
+              --chrome-flags="--headless --no-sandbox --disable-dev-shm-usage" \
+              --output=json \
+              --output-path="./lighthouse-mobile-${i}.json" \
+              --quiet
+          done
       - name: Publish metric summary
         if: always()
         run: |
-          if [ -f lighthouse-mobile.json ]; then
-            node scripts/lighthouse-summary.mjs lighthouse-mobile.json >> "$GITHUB_STEP_SUMMARY"
+          if compgen -G "lighthouse-mobile-*.json" > /dev/null; then
+            node scripts/lighthouse-summary.mjs lighthouse-mobile-*.json >> "$GITHUB_STEP_SUMMARY"
           else
             echo "Lighthouse report was not produced. Inspect the audit step logs." >> "$GITHUB_STEP_SUMMARY"
           fi
@@ -62,6 +64,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: lighthouse-mobile-report
-          path: lighthouse-mobile.json
+          path: lighthouse-mobile-*.json
           if-no-files-found: warn
           retention-days: 7
