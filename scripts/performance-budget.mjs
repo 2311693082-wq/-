@@ -61,7 +61,7 @@ assert.ok(creator.includes('sizes="(max-width: 900px) calc(100vw - 40px), (max-w
 assert.match(creator, /loading="lazy"/);
 const preloads = [...html.matchAll(/<link\b[^>]*rel=["']preload["'][^>]*as=["']image["'][^>]*>/gi)];
 assert.equal(preloads.length, 2, 'Use separate desktop and mobile hero preload hints');
-assert.match(html, /imagesrcset=["'][^"']+640w, [^"']+1200w["']/i);
+assert.match(html, /imagesrcset=["'][^"']+640w, [^"']+960w, [^"']+1200w["']/i);
 const urls = [...html.matchAll(/https:\/\/images\.unsplash\.com\/[^\s"'<>)]*/g)].map(x => x[0]);
 assert.ok(urls.length >= 7, 'Expected remote image references');
 for (const url of urls) {
@@ -80,6 +80,19 @@ assert.equal(attr(desktopPreload, 'imagesrcset'), attr(hero, 'srcset'),
   'Desktop preload must select the same responsive resource as hero img');
 assert.equal(attr(desktopPreload, 'imagesizes'), attr(hero, 'sizes'),
   'Desktop preload and hero img sizes must match');
+// The mobile hero image is 398px at most after 20px padding and 1px borders. Matching the slot
+// avoids selecting a 1200w file solely because the viewport is tablet-sized.
+const expectedHeroSizes = '(max-width: 900px) min(calc(100vw - 82px), 398px), 478px';
+assert.equal(attr(hero, 'sizes'), expectedHeroSizes);
+// A 360w source lets low-density narrow screens avoid fetching the 640w asset.
+assert.ok(attr(hero, 'srcset').includes('w=360&q=64 360w'));
+const mobilePreload = preloads.find(match => match[0].includes('media="(max-width: 900px)"'))?.[0];
+assert.ok(mobilePreload, 'Mobile preload must exist');
+assert.match(attr(hero, 'srcset'), /w=360[^,]* 360w, [^,]*w=640[^,]* 640w, [^,]*w=960[^,]* 960w, [^,]*w=1200[^,]* 1200w$/);
+for (const preload of [desktopPreload, mobilePreload]) {
+  assert.equal(attr(preload, 'imagesrcset'), attr(hero, 'srcset'));
+  assert.equal(attr(preload, 'imagesizes'), expectedHeroSizes);
+}
 const bgTag = html.match(/<div class="hero-bg"[^>]*>/)?.[0];
 const background = bgTag?.split("url('")[1]?.split("')")[0];
 assert.ok(background, 'Expected hero background');
@@ -89,9 +102,13 @@ assert.ok(backgroundWidth > 0 && backgroundWidth <= 640,
 // On modern browsers the decorative background and hero card share the same
 // 1x/2x URLs, so the browser cache can reuse the selected image response.
 assert.match(bgTag, /background-image:image-set\(/);
-const mobileHeroUrl = attr(hero, 'srcset').split(', ')[0].split(' 640w')[0];
+const mobileHeroUrl = attr(hero, 'srcset').split(', ').find(candidate => candidate.endsWith(' 640w'))?.slice(0, -5);
+assert.ok(mobileHeroUrl, 'Hero must retain a 640w candidate for desktop background reuse');
 assert.ok(bgTag.includes(`url('${mobileHeroUrl}') 1x`), 'Background 1x must reuse hero 640w candidate');
-assert.ok(bgTag.includes(`url('${attr(hero, 'src')}') 2x`), 'Background 2x must reuse hero desktop candidate');
+const mediumHeroUrl = attr(hero, 'srcset').split(', ').find(candidate => candidate.endsWith(' 960w'))?.slice(0, -5);
+assert.ok(mediumHeroUrl, 'Hero must retain a 960w candidate for desktop DPR2 reuse');
+assert.ok(bgTag.includes(`url('${mediumHeroUrl}') 2x`), 'Background 2x must reuse hero 960w candidate');
+assert.ok(bgTag.includes(`url('${attr(hero, 'src')}') 3x`), 'Background 3x must reuse hero 1200w candidate');
 
 console.log(JSON.stringify({result:'pass',htmlBytes:bytes,maxBytes,images:images.length,
   lazyImages:6,preloads:preloads.length,externalScripts:0,externalStylesheets:0}));
