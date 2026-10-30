@@ -105,7 +105,10 @@ assert.match(bgTag, /background-image:image-set\(/);
 const mobileHeroUrl = attr(hero, 'srcset').split(', ').find(candidate => candidate.endsWith(' 640w'))?.slice(0, -5);
 assert.ok(mobileHeroUrl, 'Hero must retain a 640w candidate for desktop background reuse');
 assert.ok(bgTag.includes(`url('${mobileHeroUrl}') 1x`), 'Background 1x must reuse hero 640w candidate');
-assert.ok(bgTag.includes(`url('${attr(hero, 'src')}') 2x`), 'Background 2x must reuse hero desktop candidate');
+const mediumHeroUrl = attr(hero, 'srcset').split(', ').find(candidate => candidate.endsWith(' 960w'))?.slice(0, -5);
+assert.ok(mediumHeroUrl, 'Hero must retain a 960w candidate for desktop DPR2 reuse');
+assert.ok(bgTag.includes(`url('${mediumHeroUrl}') 2x`), 'Background 2x must reuse hero 960w candidate');
+assert.ok(bgTag.includes(`url('${attr(hero, 'src')}') 3x`), 'Background 3x must reuse hero 1200w candidate');
 
 console.log(JSON.stringify({result:'pass',htmlBytes:bytes,maxBytes,images:images.length,
   lazyImages:6,preloads:preloads.length,externalScripts:0,externalStylesheets:0}));
