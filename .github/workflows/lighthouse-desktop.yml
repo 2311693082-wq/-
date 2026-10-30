@@ -1,0 +1,67 @@
+name: Lighthouse desktop hero regression
+
+on:
+  pull_request:
+    paths:
+      - 'preview-server.mjs'
+      - 'preview.html'
+      - 'data/**'
+      - 'scripts/lighthouse-desktop-hero-budget.mjs'
+      - 'scripts/lighthouse-desktop-hero-budget.test.mjs'
+      - '.github/workflows/lighthouse-desktop.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: lighthouse-desktop-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  desktop-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Test desktop hero network inspector
+        run: node --test scripts/lighthouse-desktop-hero-budget.test.mjs
+      - name: Start local preview
+        run: |
+          node preview-server.mjs > /tmp/heitao-desktop-preview.log 2>&1 &
+          for i in $(seq 1 30); do
+            if curl --fail --silent http://127.0.0.1:3000/ --output /dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/heitao-desktop-preview.log
+          exit 1
+      - name: Measure desktop performance (two sequential runs, DPR1)
+        run: |
+          for i in 1 2; do
+            npm exec --yes --package=lighthouse@12 -- lighthouse http://127.0.0.1:3000/ \
+              --only-categories=performance \
+              --form-factor=desktop \
+              --screenEmulation.mobile=false \
+              --screenEmulation.width=1280 \
+              --screenEmulation.height=800 \
+              --screenEmulation.deviceScaleFactor=1 \
+              --chrome-flags="--headless --no-sandbox --disable-dev-shm-usage" \
+              --output=json \
+              --output-path="./lighthouse-desktop-${i}.json" \
+              --quiet
+          done
+      - name: Verify desktop hero requests and publish summary
+        run: |
+          set -o pipefail
+          node scripts/lighthouse-desktop-hero-budget.mjs lighthouse-desktop-*.json | tee -a "$GITHUB_STEP_SUMMARY"
+      - name: Save raw desktop Lighthouse reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-desktop-report
+          path: lighthouse-desktop-*.json
+          if-no-files-found: warn
+          retention-days: 7
